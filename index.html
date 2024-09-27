@@ -3,11 +3,11 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>1v1 Poker Game</title>
+    <title>Texas Hold'em Poker</title>
     <style>
         body {
-            background-color: #2c3e50;
-            color: #ecf0f1;
+            background-color: #2b2d42;
+            color: #edf2f4;
             font-family: 'Arial', sans-serif;
             margin: 0;
             padding: 0;
@@ -17,29 +17,46 @@
             height: 100vh;
         }
         .container {
-            text-align: center;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            background-color: #1c1f33;
+            border-radius: 20px;
             padding: 20px;
+            box-shadow: 0 0 15px rgba(0, 0, 0, 0.5);
+            width: 80%;
+            max-width: 900px;
+            min-height: 80vh;
+        }
+        .table {
+            background-color: #4c566a;
             border-radius: 15px;
-            background-color: #34495e;
-            box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
-            max-width: 600px;
+            padding: 15px;
             width: 100%;
+            display: flex;
+            justify-content: space-around;
+            align-items: center;
+            flex-wrap: wrap;
         }
-        h1 {
-            margin-bottom: 20px;
-            font-size: 24px;
-            color: #f1c40f;
-        }
-        .game-info, .player-info {
-            margin-bottom: 20px;
-            font-size: 18px;
-        }
-        .player-info span {
+        .card {
+            width: 50px;
+            height: 75px;
+            background-color: #d4a373;
+            border-radius: 5px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 20px;
+            color: #1c1f33;
             font-weight: bold;
-            color: #e74c3c;
+            margin: 5px;
+            box-shadow: 0 0 5px rgba(0, 0, 0, 0.2);
+        }
+        .actions {
+            margin-top: 20px;
         }
         .actions button {
-            background-color: #2980b9;
+            background-color: #ef233c;
             color: #fff;
             border: none;
             padding: 10px 20px;
@@ -50,189 +67,188 @@
             transition: background-color 0.3s;
         }
         .actions button:hover {
-            background-color: #3498db;
+            background-color: #d90429;
         }
         .actions button:disabled {
-            background-color: #95a5a6;
+            background-color: #8d99ae;
             cursor: not-allowed;
+        }
+        .info {
+            margin: 10px;
+            font-size: 18px;
+            text-align: center;
+        }
+        .player-cards, .bot-cards, .community-cards {
+            display: flex;
+            justify-content: center;
+            margin: 10px 0;
+        }
+        .pot, .chips {
+            font-size: 20px;
+            font-weight: bold;
+            margin: 5px;
+        }
+        .pot {
+            color: #e9c46a;
+        }
+        .chips {
+            color: #06d6a0;
+        }
+        h1 {
+            color: #e76f51;
         }
     </style>
 </head>
 <body>
     <div class="container">
-        <h1>1v1 Poker Game</h1>
-        <div class="player-info">
-            <p>Ваши фишки: <span id="player-chips">100</span></p>
-            <p>Фишки бота: <span id="bot-chips">100</span></p>
-        </div>
-        <div class="game-info" id="game-info">
-            <button onclick="startGame()">Начать раздачу</button>
+        <h1>Texas Hold'em Poker</h1>
+        <div class="table">
+            <div class="info pot" id="pot-info">Банк: 0 фишек</div>
+            <div class="community-cards" id="community-cards">
+                <!-- Карты на столе -->
+            </div>
+            <div class="player-cards" id="player-cards">
+                <!-- Карты игрока -->
+            </div>
+            <div class="bot-cards" id="bot-cards">
+                <!-- Карты бота -->
+            </div>
+            <div class="info chips" id="player-chips">Ваши фишки: 100</div>
+            <div class="info chips" id="bot-chips">Фишки бота: 100</div>
         </div>
         <div class="actions" id="actions">
-            <!-- Здесь будут кнопки действий -->
+            <button onclick="startGame()">Начать игру</button>
         </div>
     </div>
     <script>
-        // Флаг для режима работы: true, если приложение работает внутри Telegram WebApp
-        let isTelegram = false;
-        let tg; // Объект Telegram WebApp будет инициализирован позже, если доступен
-
-        // Проверяем наличие объекта Telegram WebApp API
-        if (typeof window.Telegram !== 'undefined' && window.Telegram.WebApp) {
-            tg = window.Telegram.WebApp;
-            tg.expand(); // Расширить мини-приложение на весь экран
-            isTelegram = true;
-        }
-
-        // Начальные переменные и колода карт
         let playerChips = 100;
         let botChips = 100;
         let playerHand = [];
         let botHand = [];
-        let commonCard = null;
+        let communityCards = [];
         let pot = 0;
+        let currentBet = 10;
+        const deck = createDeck();
 
-        const cardValues = {
-            '2': 2, '3': 3, '4': 4, '5': 5, '6': 6, '7': 7, '8': 8, '9': 9, '10': 10,
-            'J': 11, 'Q': 12, 'K': 13, 'A': 14
-        };
-        const cardDeck = Object.keys(cardValues);
+        function createDeck() {
+            const suits = ['♠', '♥', '♣', '♦'];
+            const ranks = ['2', '3', '4', '5', '6', '7', '8', '9', '10', 'J', 'Q', 'K', 'A'];
+            const deck = [];
+            for (let suit of suits) {
+                for (let rank of ranks) {
+                    deck.push(`${rank}${suit}`);
+                }
+            }
+            return deck;
+        }
 
         function startGame() {
+            resetGame();
+            shuffle(deck);
             playerHand = drawCards(2);
             botHand = drawCards(2);
-            commonCard = drawCards(1)[0];
-
-            playerChips -= 10;
-            botChips -= 10;
-            pot = 20;
-
-            displayGameInfo();
-            displayActions(['call', 'fold', 'raise']);
-            updateChips();
+            updateUI();
+            setTimeout(() => {
+                showFlop();
+            }, 1000);
         }
 
-        function displayGameInfo() {
-            const gameInfo = `
-                <p>Ваши карты: ${playerHand.join(', ')}</p>
-                <p>Общая карта: ${commonCard}</p>
-                <p>В банке: ${pot} фишек</p>
-            `;
-            document.getElementById('game-info').innerHTML = gameInfo;
-        }
-
-        function displayActions(actions) {
-            let buttons = '';
-            if (actions.includes('call')) {
-                buttons += '<button onclick="playerCall()">Колл (10 фишек)</button>';
-            }
-            if (actions.includes('fold')) {
-                buttons += '<button onclick="playerFold()">Пас</button>';
-            }
-            if (actions.includes('raise')) {
-                buttons += '<button onclick="playerRaise()">Повысить (20 фишек)</button>';
-            }
-            document.getElementById('actions').innerHTML = buttons;
-        }
-
-        function playerCall() {
-            playerChips -= 10;
-            pot += 10;
-            if (botMove() === 'call') {
-                botChips -= 10;
-                pot += 10;
-                showDown();
-            } else {
-                winPot('player');
-            }
-            updateChips();
-        }
-
-        function playerFold() {
-            winPot('bot');
-        }
-
-        function playerRaise() {
-            playerChips -= 20;
-            pot += 20;
-            if (botMove(true) === 'call') {
-                botChips -= 20;
-                pot += 20;
-                showDown();
-            } else {
-                winPot('player');
-            }
-            updateChips();
-        }
-
-        function botMove(isRaise = false) {
-            if (isRaise) {
-                return botChips >= 20 ? 'call' : 'fold';
-            }
-            return botChips >= 10 ? 'call' : 'fold';
-        }
-
-        function showDown() {
-            const playerScore = handValue(playerHand) + cardValue(commonCard);
-            const botScore = handValue(botHand) + cardValue(commonCard);
-
-            let result;
-            if (playerScore > botScore) {
-                result = `Вы выиграли с ${playerScore} против ${botScore}`;
-                winPot('player');
-            } else if (playerScore < botScore) {
-                result = `Бот выиграл с ${botScore} против ${playerScore}`;
-                winPot('bot');
-            } else {
-                result = `Ничья! Оба имеют ${playerScore}`;
-                winPot();
-            }
-
-            document.getElementById('game-info').innerHTML = `<p>${result}</p>`;
-            document.getElementById('actions').innerHTML = '<button onclick="startGame()">Начать новую раздачу</button>';
-            updateChips();
-        }
-
-        function winPot(winner = null) {
-            if (winner === 'player') {
-                playerChips += pot;
-            } else if (winner === 'bot') {
-                botChips += pot;
-            }
+        function resetGame() {
+            communityCards = [];
             pot = 0;
+            currentBet = 10;
+            document.getElementById('actions').innerHTML = '';
         }
 
         function drawCards(num) {
-            return Array.from({ length: num }, () => cardDeck[Math.floor(Math.random() * cardDeck.length)]);
+            return deck.splice(0, num);
         }
 
-        function handValue(hand) {
-            return hand.reduce((total, card) => total + cardValues[card], 0);
-        }
-
-        function cardValue(card) {
-            return cardValues[card];
-        }
-
-        function updateChips() {
-            document.getElementById('player-chips').innerText = playerChips;
-            document.getElementById('bot-chips').innerText = botChips;
-        }
-
-        function endGame() {
-            if (isTelegram) {
-                tg.sendData(JSON.stringify({ playerChips, botChips }));
-                tg.close();
-            } else {
-                alert(`Игра завершена!\nВаши фишки: ${playerChips}\nФишки бота: ${botChips}`);
+        function shuffle(deck) {
+            for (let i = deck.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [deck[i], deck[j]] = [deck[j], deck[i]];
             }
         }
 
-        // Добавление кнопки "Завершить игру" только в Telegram WebApp
-        if (isTelegram) {
-            tg.MainButton.setText("Завершить игру");
-            tg.MainButton.show();
-            tg.MainButton.onClick(endGame);
+        function showFlop() {
+            communityCards = drawCards(3);
+            updateUI();
+            setTimeout(() => {
+                showTurn();
+            }, 1000);
+        }
+
+        function showTurn() {
+            communityCards.push(drawCards(1)[0]);
+            updateUI();
+            setTimeout(() => {
+                showRiver();
+            }, 1000);
+        }
+
+        function showRiver() {
+            communityCards.push(drawCards(1)[0]);
+            updateUI();
+            setTimeout(() => {
+                determineWinner();
+            }, 1000);
+        }
+
+        function updateUI() {
+            const playerCardsElem = document.getElementById('player-cards');
+            const botCardsElem = document.getElementById('bot-cards');
+            const communityCardsElem = document.getElementById('community-cards');
+            const potElem = document.getElementById('pot-info');
+            const playerChipsElem = document.getElementById('player-chips');
+            const botChipsElem = document.getElementById('bot-chips');
+
+            playerCardsElem.innerHTML = '';
+            botCardsElem.innerHTML = '';
+            communityCardsElem.innerHTML = '';
+
+            playerHand.forEach(card => playerCardsElem.innerHTML += `<div class="card">${card}</div>`);
+            botHand.forEach(card => botCardsElem.innerHTML += `<div class="card">?</div>`); // Скрытые карты бота
+            communityCards.forEach(card => communityCardsElem.innerHTML += `<div class="card">${card}</div>`);
+
+            potElem.textContent = `Банк: ${pot} фишек`;
+            playerChipsElem.textContent = `Ваши фишки: ${playerChips}`;
+            botChipsElem.textContent = `Фишки бота: ${botChips}`;
+        }
+
+        function determineWinner() {
+            // Здесь нужно реализовать логику определения победителя
+            // Для упрощения примера мы будем использовать случайный выбор
+
+            const playerScore = calculateHandScore(playerHand.concat(communityCards));
+            const botScore = calculateHandScore(botHand.concat(communityCards));
+
+            let result;
+            if (playerScore > botScore) {
+                playerChips += pot;
+                result = "Вы выиграли!";
+            } else if (playerScore < botScore) {
+                botChips += pot;
+                result = "Бот выиграл!";
+            } else {
+                playerChips += pot / 2;
+                botChips += pot / 2;
+                result = "Ничья!";
+            }
+
+            document.getElementById('actions').innerHTML = `
+                <div class="info">${result}</div>
+                <button onclick="startGame()">Играть снова</button>
+            `;
+            updateUI();
+        }
+
+        function calculateHandScore(hand) {
+            // Логика расчета комбинации, упрощенная версия
+            // В реальном сценарии нужно реализовать полноценное определение комбинаций
+            const ranks = hand.map(card => card.slice(0, -1));
+            const uniqueRanks = new Set(ranks);
+            return uniqueRanks.size; // Чем меньше уникальных карт, тем лучше комбинация
         }
     </script>
 </body>
