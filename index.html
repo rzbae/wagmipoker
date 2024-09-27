@@ -56,24 +56,24 @@
         .cards, .player, .bot {
             position: absolute;
             display: flex;
+            gap: 10px; /* Отступы между картами */
         }
         .cards {
             top: 50%;
             left: 50%;
             transform: translate(-50%, -50%);
-            gap: 15px;
         }
         .player {
-            bottom: 0;
+            bottom: 10%;
             left: 50%;
-            transform: translate(-50%, 30%);
+            transform: translateX(-50%);
             flex-direction: column;
             align-items: center;
         }
         .bot {
-            top: 0;
+            top: 10%;
             left: 50%;
-            transform: translate(-50%, -30%);
+            transform: translateX(-50%);
             flex-direction: column;
             align-items: center;
         }
@@ -200,7 +200,7 @@
         let botHand = [];
         let communityCards = [];
         let pot = 0;
-        let currentBet = 10;
+        let currentBet = 0; // Начальное значение ставки
         let playerAction = false;
         const deck = createDeck();
 
@@ -228,7 +228,7 @@
         function resetGame() {
             communityCards = [];
             pot = 0;
-            currentBet = 10;
+            currentBet = 0; // Обнуление ставки в начале игры
             playerAction = false;
             document.getElementById('actions').innerHTML = '';
             document.getElementById('player-cards').innerHTML = '';
@@ -250,11 +250,15 @@
 
         function playerTurn(stage) {
             playerAction = true;
-            document.getElementById('actions').innerHTML = `
-                <button onclick="playerCall('${stage}')">Колл (${currentBet} фишек)</button>
-                <button onclick="playerRaise('${stage}')">Рейз (${currentBet * 2} фишек)</button>
+            let actionsHTML = `
+                <button onclick="playerCall('${stage}')" ${currentBet === 0 ? 'disabled' : ''}>Колл (${currentBet} фишек)</button>
+                <button onclick="playerRaise('${stage}')">Рейз (${currentBet * 2 || 20} фишек)</button>
                 <button onclick="playerFold('${stage}')">Пас</button>
             `;
+            if (currentBet === 0) {
+                actionsHTML = `<button onclick="playerCheck('${stage}')">Чек</button>` + actionsHTML;
+            }
+            document.getElementById('actions').innerHTML = actionsHTML;
         }
 
         function playerCall(stage) {
@@ -266,10 +270,16 @@
         }
 
         function playerRaise(stage) {
-            let raiseAmount = currentBet * 2;
+            let raiseAmount = currentBet * 2 || 20; // Минимальный рейз — 20 фишек
             playerChips -= raiseAmount;
             pot += raiseAmount;
             currentBet = raiseAmount;
+            updateUI();
+            playerAction = false;
+            setTimeout(() => botTurn(stage), 500);
+        }
+
+        function playerCheck(stage) {
             updateUI();
             playerAction = false;
             setTimeout(() => botTurn(stage), 500);
@@ -284,15 +294,12 @@
         function botTurn(stage) {
             let botDecision = Math.random() < 0.5 ? 'call' : 'fold'; // Случайное решение
 
-            if (botDecision === 'call') {
+            if (botDecision === 'call' && currentBet > 0) {
                 if (botChips >= currentBet) {
                     botChips -= currentBet;
                     pot += currentBet;
                     updateUI();
-                    if (stage === 'preflop') showFlop();
-                    else if (stage === 'flop') showTurn();
-                    else if (stage === 'turn') showRiver();
-                    else determineWinner();
+                    nextStage(stage);
                 } else {
                     botDecision = 'fold';
                 }
@@ -302,23 +309,37 @@
                 playerChips += pot;
                 updateUI();
                 endRound(`Бот сбросил карты. Вы выиграли банк в ${pot} фишек!`);
+            } else if (botDecision === 'call') {
+                nextStage(stage);
+            } else {
+                nextStage(stage);
             }
+        }
+
+        function nextStage(stage) {
+            if (stage === 'preflop') showFlop();
+            else if (stage === 'flop') showTurn();
+            else if (stage === 'turn') showRiver();
+            else determineWinner();
         }
 
         function showFlop() {
             communityCards = drawCards(3);
+            currentBet = 0; // Обнулить ставку для следующего этапа
             updateUI();
             setTimeout(() => playerTurn('flop'), 500);
         }
 
         function showTurn() {
             communityCards.push(drawCards(1)[0]);
+            currentBet = 0; // Обнулить ставку для следующего этапа
             updateUI();
             setTimeout(() => playerTurn('turn'), 500);
         }
 
         function showRiver() {
             communityCards.push(drawCards(1)[0]);
+            currentBet = 0; // Обнулить ставку для следующего этапа
             updateUI();
             setTimeout(() => playerTurn('river'), 500);
         }
