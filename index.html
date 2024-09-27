@@ -32,15 +32,17 @@
         const tg = window.Telegram.WebApp;
         tg.expand(); // Расширить мини-приложение на весь экран
 
+        // Инициализация переменных в начале
         let playerChips = 100;
         let botChips = 100;
-        let playerHand = [];
-        let botHand = [];
-        let commonCard = null;
+        let playerHand = []; // Объявление пустого массива
+        let botHand = []; // Объявление пустого массива
+        let commonCard = null; // Объявление переменной
         let pot = 0;
 
+        // Функция начала игры
         function startGame() {
-            playerHand = drawCards(2);
+            playerHand = drawCards(2); // Теперь переменные инициализированы до их использования
             botHand = drawCards(2);
             commonCard = drawCards(1)[0];
 
@@ -61,6 +63,7 @@
             updateChips();
         }
 
+        // Функция для вызова ставки игроком
         function playerCall() {
             playerChips -= 10;
             pot += 10;
@@ -75,10 +78,12 @@
             updateChips();
         }
 
+        // Функция для паса игроком
         function playerFold() {
             winPot('bot');
         }
 
+        // Функция для повышения ставки игроком
         function playerRaise() {
             playerChips -= 20;
             pot += 20;
@@ -93,6 +98,7 @@
             updateChips();
         }
 
+        // Логика хода бота
         function botMove(isRaise = false) {
             if (isRaise) {
                 return botChips >= 20 ? 'call' : 'fold';
@@ -100,6 +106,7 @@
             return botChips >= 10 ? 'call' : 'fold';
         }
 
+        // Функция для определения победителя
         function showDown() {
             const playerScore = handValue(playerHand) + cardValue(commonCard);
             const botScore = handValue(botHand) + cardValue(commonCard);
@@ -123,6 +130,7 @@
             updateChips();
         }
 
+        // Функция для раздачи выигрыша
         function winPot(winner = null) {
             if (winner === 'player') {
                 playerChips += pot;
@@ -132,27 +140,31 @@
             pot = 0;
         }
 
+        // Функция для раздачи карт
         function drawCards(num) {
             const cards = ['2', '3', '4', '5', '6', '7', '8', '9', '10', 'J', 'Q', 'K', 'A'];
             return Array.from({ length: num }, () => cards[Math.floor(Math.random() * cards.length)]);
         }
 
+        // Функция для подсчета значений карт
         function handValue(hand) {
             const values = { '2': 2, '3': 3, '4': 4, '5': 5, '6': 6, '7': 7, '8': 8, '9': 9, '10': 10, 'J': 11, 'Q': 12, 'K': 13, 'A': 14 };
             return hand.reduce((total, card) => total + values[card], 0);
         }
 
+        // Функция для подсчета значения одной карты
         function cardValue(card) {
             const values = { '2': 2, '3': 3, '4': 4, '5': 5, '6': 6, '7': 7, '8': 8, '9': 9, '10': 10, 'J': 11, 'Q': 12, 'K': 13, 'A': 14 };
             return values[card];
         }
 
+        // Функция для обновления отображения фишек
         function updateChips() {
             document.getElementById('player-chips').innerText = playerChips;
             document.getElementById('bot-chips').innerText = botChips;
         }
 
-        // Завершение работы мини-приложения
+        // Завершение игры и отправка данных
         function endGame() {
             tg.sendData(JSON.stringify({ playerChips, botChips }));
             tg.close();
