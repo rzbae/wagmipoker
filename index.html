@@ -56,9 +56,9 @@
         .cards, .player, .bot {
             position: absolute;
             display: flex;
-            justify-content: center; /* Центровка по горизонтали */
-            align-items: center; /* Центровка по вертикали */
-            gap: 10px; /* Отступы между картами */
+            justify-content: center;
+            align-items: center;
+            gap: 10px;
         }
         .cards {
             top: 50%;
@@ -66,29 +66,31 @@
             transform: translate(-50%, -50%);
         }
         .player {
-            bottom: 15%; /* Положение ниже по столу */
+            bottom: 15%;
             left: 50%;
             transform: translateX(-50%);
         }
         .bot {
-            top: 15%; /* Положение выше по столу */
+            top: 15%;
             left: 50%;
             transform: translateX(-50%);
         }
         .card {
-            width: 60px;
-            height: 90px;
+            width: 50px; /* Уменьшен размер карт */
+            height: 75px; /* Уменьшен размер карт */
             background-color: #fff;
             border-radius: 10px;
             display: flex;
             justify-content: center;
             align-items: center;
-            font-size: 20px;
+            font-size: 18px; /* Уменьшен размер шрифта */
             font-weight: bold;
             color: #333;
             margin: 5px;
             box-shadow: 0 0 5px rgba(0, 0, 0, 0.2);
             transition: transform 0.3s ease-in-out, opacity 0.3s ease-in-out;
+        }
+        .card.animate {
             opacity: 0;
             transform: translateY(-20px);
         }
@@ -219,7 +221,7 @@
             shuffle(deck);
             playerHand = drawCards(2);
             botHand = drawCards(2);
-            updateUI();
+            updateUI(true); // Первоначальная раздача с анимацией
             setTimeout(() => playerTurn('preflop'), 1000); // Начать с префлопа
         }
 
@@ -262,7 +264,7 @@
         function playerCall(stage) {
             playerChips -= currentBet;
             pot += currentBet;
-            updateUI();
+            updateUI(false);
             playerAction = false;
             setTimeout(() => botTurn(stage), 500);
         }
@@ -272,20 +274,20 @@
             playerChips -= raiseAmount;
             pot += raiseAmount;
             currentBet = raiseAmount;
-            updateUI();
+            updateUI(false);
             playerAction = false;
             setTimeout(() => botTurn(stage), 500);
         }
 
         function playerCheck(stage) {
-            updateUI();
+            updateUI(false);
             playerAction = false;
             setTimeout(() => botTurn(stage), 500);
         }
 
         function playerFold(stage) {
             botChips += pot;
-            updateUI();
+            updateUI(false);
             endRound(`Вы скинули карты. Бот выиграл банк в ${pot} фишек!`);
         }
 
@@ -296,7 +298,7 @@
                 if (botChips >= currentBet) {
                     botChips -= currentBet;
                     pot += currentBet;
-                    updateUI();
+                    updateUI(false);
                     nextStage(stage);
                 } else {
                     botDecision = 'fold';
@@ -305,7 +307,7 @@
 
             if (botDecision === 'fold') {
                 playerChips += pot;
-                updateUI();
+                updateUI(false);
                 endRound(`Бот сбросил карты. Вы выиграли банк в ${pot} фишек!`);
             } else if (botDecision === 'call') {
                 nextStage(stage);
@@ -324,25 +326,25 @@
         function showFlop() {
             communityCards = drawCards(3);
             currentBet = 0; // Обнулить ставку для следующего этапа
-            updateUI();
+            updateUI(false); // Флоп без анимации для карт игрока и бота
             setTimeout(() => playerTurn('flop'), 500);
         }
 
         function showTurn() {
             communityCards.push(drawCards(1)[0]);
             currentBet = 0; // Обнулить ставку для следующего этапа
-            updateUI();
+            updateUI(false); // Терн без анимации для карт игрока и бота
             setTimeout(() => playerTurn('turn'), 500);
         }
 
         function showRiver() {
             communityCards.push(drawCards(1)[0]);
             currentBet = 0; // Обнулить ставку для следующего этапа
-            updateUI();
+            updateUI(false); // Ривер без анимации для карт игрока и бота
             setTimeout(() => playerTurn('river'), 500);
         }
 
-        function updateUI() {
+        function updateUI(animate = true) {
             const playerCardsElem = document.getElementById('player-cards');
             const botCardsElem = document.getElementById('bot-cards');
             const communityCardsElem = document.getElementById('community-cards');
@@ -355,21 +357,19 @@
             communityCardsElem.innerHTML = '';
 
             playerHand.forEach((card, index) => {
-                let cardElem = createCardElement(card);
-                setTimeout(() => cardElem.classList.add('show'), index * 300);
+                let cardElem = createCardElement(card, animate);
                 playerCardsElem.appendChild(cardElem);
             });
 
             botHand.forEach((card, index) => {
-                let cardElem = createCardElement('?');
-                setTimeout(() => cardElem.classList.add('show'), index * 300);
+                let cardElem = createCardElement('?', animate);
                 botCardsElem.appendChild(cardElem);
             });
 
             communityCards.forEach((card, index) => {
-                let cardElem = createCardElement(card);
-                setTimeout(() => cardElem.classList.add('show'), index * 300);
+                let cardElem = createCardElement(card, false); // Без анимации для флопа, терна и ривера
                 communityCardsElem.appendChild(cardElem);
+                setTimeout(() => cardElem.classList.add('show'), index * 300); // Анимация только для общих карт
             });
 
             potElem.textContent = `Банк: ${pot} фишек`;
@@ -377,9 +377,15 @@
             botChipsElem.textContent = `Фишки бота: ${botChips}`;
         }
 
-        function createCardElement(card) {
+        function createCardElement(card, animate = true) {
             let cardElem = document.createElement('div');
             cardElem.classList.add('card');
+            if (animate) {
+                cardElem.classList.add('animate');
+                setTimeout(() => cardElem.classList.add('show'), 100); // Добавить класс show с задержкой для анимации
+            } else {
+                cardElem.classList.add('show');
+            }
             cardElem.innerText = card;
             return cardElem;
         }
@@ -438,7 +444,7 @@
             document.getElementById('actions').innerHTML = `
                 <button onclick="startGame()">Играть снова</button>
             `;
-            updateUI();
+            updateUI(false);
         }
     </script>
 </body>
