@@ -451,33 +451,34 @@
         }
 
         function calculateHandScore(hand) {
-            // Функция определения комбинаций и расчета очков
-            const ranks = hand.map(card => card.slice(0, -1));
-            const suits = hand.map(card => card.slice(-1));
-            const rankCount = ranks.reduce((acc, rank) => {
-                acc[rank] = (acc[rank] || 0) + 1;
-                return acc;
-            }, {});
-            const suitCount = suits.reduce((acc, suit) => {
-                acc[suit] = (acc[suit] || 0) + 1;
-                return acc;
-            }, {});
+    // Функция определения комбинаций и расчета очков
+    const ranks = hand.map(card => card.slice(0, -1));
+    const suits = hand.map(card => card.slice(-1));
+    const rankCount = ranks.reduce((acc, rank) => {
+        acc[rank] = (acc[rank] || 0) + 1;
+        return acc;
+    }, {});
+    const suitCount = suits.reduce((acc, suit) => {
+        acc[suit] = (acc[suit] || 0) + 1;
+        return acc;
+    }, {});
 
-            const uniqueRanks = Object.keys(rankCount);
-            const uniqueSuits = Object.keys(suitCount);
-            const isFlush = uniqueSuits.some(suit => suitCount[suit] >= 5);
-            const isStraight = uniqueRanks.length >= 5 && uniqueRanks.slice(-5).every((rank, i, arr) => i === 0 || arr[i - 1] - rank === 1);
+    const uniqueRanks = Object.keys(rankCount);
+    const uniqueSuits = Object.keys(suitCount);
+    const isFlush = uniqueSuits.some(suit => suitCount[suit] >= 5);
+    const isStraight = uniqueRanks.length >= 5 && uniqueRanks.sort((a, b) => "23456789TJQKA".indexOf(a) - "23456789TJQKA".indexOf(b))
+        .slice(-5).every((rank, i, arr) => i === 0 || "23456789TJQKA".indexOf(arr[i]) - "23456789TJQKA".indexOf(arr[i - 1]) === 1);
 
-            if (isFlush && isStraight) return 9; // Стрит-флеш
-            if (uniqueRanks.some(rank => rankCount[rank] === 4)) return 8; // Каре
-            if (uniqueRanks.some(rank => rankCount[rank] === 3) и уникальныеРанки.some(ранг => рангСчет[ранг] === 2)) возврат 7; // Фулл-хаус
-            если (это flush) return 6; // flush
-            если (это прямой) вернуть 5; // straight
-            если (уникальныеРанки.some(ранг => рангСчет[ранг] === 3)) вернуть 4; // set
-            если (уникальныеРанки.filter(ранг => рангСчет[ранг] === 2).length >= 2) вернуть 3; // Две пары
-            если (уникальныеРанки.some(ранг => рангСчет[ранг] === 2)) вернуть 2; // Одна пара
-            вернуть 1; // Высокая карта
-        }
+    if (isFlush && isStraight) return 9; // Стрит-флеш
+    if (uniqueRanks.some(rank => rankCount[rank] === 4)) return 8; // Каре
+    if (uniqueRanks.some(rank => rankCount[rank] === 3) && uniqueRanks.some(rank => rankCount[rank] === 2)) return 7; // Фулл-хаус
+    if (isFlush) return 6; // Флеш
+    if (isStraight) return 5; // Стрит
+    if (uniqueRanks.some(rank => rankCount[rank] === 3)) return 4; // Сет
+    if (uniqueRanks.filter(rank => rankCount[rank] === 2).length >= 2) return 3; // Две пары
+    if (uniqueRanks.some(rank => rankCount[rank] === 2)) return 2; // Одна пара
+    return 1; // Старшая карта
+}
 
         function endRound(message) {
             document.getElementById('info-message').innerText = message;
