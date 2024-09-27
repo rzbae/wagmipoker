@@ -136,6 +136,7 @@
         let communityCards = [];
         let pot = 0;
         let currentBet = 10;
+        let playerAction = false;
         const deck = createDeck();
 
         function createDeck() {
@@ -156,15 +157,14 @@
             playerHand = drawCards(2);
             botHand = drawCards(2);
             updateUI();
-            setTimeout(() => {
-                showFlop();
-            }, 1000);
+            setTimeout(() => playerTurn('preflop'), 1000); // Начать с префлопа
         }
 
         function resetGame() {
             communityCards = [];
             pot = 0;
             currentBet = 10;
+            playerAction = false;
             document.getElementById('actions').innerHTML = '';
             document.getElementById('player-cards').innerHTML = '';
             document.getElementById('bot-cards').innerHTML = '';
@@ -182,28 +182,79 @@
             }
         }
 
+        function playerTurn(stage) {
+            playerAction = true;
+            document.getElementById('actions').innerHTML = `
+                <button onclick="playerCall('${stage}')">Колл (${currentBet} фишек)</button>
+                <button onclick="playerRaise('${stage}')">Рейз (${currentBet * 2} фишек)</button>
+                <button onclick="playerFold('${stage}')">Пас</button>
+            `;
+        }
+
+        function playerCall(stage) {
+            playerChips -= currentBet;
+            pot += currentBet;
+            updateUI();
+            playerAction = false;
+            setTimeout(() => botTurn(stage), 500);
+        }
+
+        function playerRaise(stage) {
+            let raiseAmount = currentBet * 2;
+            playerChips -= raiseAmount;
+            pot += raiseAmount;
+            currentBet = raiseAmount;
+            updateUI();
+            playerAction = false;
+            setTimeout(() => botTurn(stage), 500);
+        }
+
+        function playerFold(stage) {
+            botChips += pot;
+            updateUI();
+            endRound(`Вы скинули карты. Бот выиграл банк в ${pot} фишек!`);
+        }
+
+        function botTurn(stage) {
+            let botDecision = Math.random() < 0.5 ? 'call' : 'fold'; // Случайное решение
+
+            if (botDecision === 'call') {
+                if (botChips >= currentBet) {
+                    botChips -= currentBet;
+                    pot += currentBet;
+                    updateUI();
+                    if (stage === 'preflop') showFlop();
+                    else if (stage === 'flop') showTurn();
+                    else if (stage === 'turn') showRiver();
+                    else determineWinner();
+                } else {
+                    botDecision = 'fold';
+                }
+            }
+
+            if (botDecision === 'fold') {
+                playerChips += pot;
+                updateUI();
+                endRound(`Бот сбросил карты. Вы выиграли банк в ${pot} фишек!`);
+            }
+        }
+
         function showFlop() {
             communityCards = drawCards(3);
             updateUI();
-            setTimeout(() => {
-                showTurn();
-            }, 1000);
+            setTimeout(() => playerTurn('flop'), 500);
         }
 
         function showTurn() {
             communityCards.push(drawCards(1)[0]);
             updateUI();
-            setTimeout(() => {
-                showRiver();
-            }, 1000);
+            setTimeout(() => playerTurn('turn'), 500);
         }
 
         function showRiver() {
             communityCards.push(drawCards(1)[0]);
             updateUI();
-            setTimeout(() => {
-                determineWinner();
-            }, 1000);
+            setTimeout(() => playerTurn('river'), 500);
         }
 
         function updateUI() {
@@ -213,6 +264,10 @@
             const potElem = document.getElementById('pot-info');
             const playerChipsElem = document.getElementById('player-chips');
             const botChipsElem = document.getElementById('bot-chips');
+
+            playerCardsElem.innerHTML = '';
+            botCardsElem.innerHTML = '';
+            communityCardsElem.innerHTML = '';
 
             playerHand.forEach((card, index) => {
                 let cardElem = createCardElement(card);
@@ -261,11 +316,7 @@
                 result = "Ничья!";
             }
 
-            document.getElementById('actions').innerHTML = `
-                <div class="info">${result}</div>
-                <button onclick="startGame()">Играть снова</button>
-            `;
-            updateUI();
+            endRound(result);
         }
 
         function calculateHandScore(hand) {
@@ -295,6 +346,14 @@
             if (uniqueRanks.filter(rank => rankCount[rank] === 2).length >= 2) return 3; // Две пары
             if (uniqueRanks.some(rank => rankCount[rank] === 2)) return 2; // Одна пара
             return 1; // Старшая карта
+        }
+
+        function endRound(message) {
+            document.getElementById('actions').innerHTML = `
+                <div class="info">${message}</div>
+                <button onclick="startGame()">Играть снова</button>
+            `;
+            updateUI();
         }
     </script>
 </body>
