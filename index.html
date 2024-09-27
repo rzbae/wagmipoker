@@ -56,6 +56,8 @@
         .cards, .player, .bot {
             position: absolute;
             display: flex;
+            justify-content: center; /* Центровка по горизонтали */
+            align-items: center; /* Центровка по вертикали */
             gap: 10px; /* Отступы между картами */
         }
         .cards {
@@ -64,18 +66,14 @@
             transform: translate(-50%, -50%);
         }
         .player {
-            bottom: 10%;
+            bottom: 15%; /* Положение ниже по столу */
             left: 50%;
             transform: translateX(-50%);
-            flex-direction: column;
-            align-items: center;
         }
         .bot {
-            top: 10%;
+            top: 15%; /* Положение выше по столу */
             left: 50%;
             transform: translateX(-50%);
-            flex-direction: column;
-            align-items: center;
         }
         .card {
             width: 60px;
@@ -156,12 +154,12 @@
             font-size: 18px;
         }
         .player-info {
-            bottom: 12%;
+            bottom: 10%;
             left: 50%;
             transform: translateX(-50%);
         }
         .bot-info {
-            top: 12%;
+            top: 10%;
             left: 50%;
             transform: translateX(-50%);
         }
