@@ -73,158 +73,166 @@
         </div>
     </div>
     <script>
-        // Проверка на наличие Telegram WebApp API
+        // Флаг для режима работы: true, если приложение работает внутри Telegram WebApp
+        let isTelegram = false;
+        let tg; // Объект Telegram WebApp будет инициализирован позже, если доступен
+
+        // Проверяем наличие объекта Telegram WebApp API
         if (typeof window.Telegram !== 'undefined' && window.Telegram.WebApp) {
-            const tg = window.Telegram.WebApp;
+            tg = window.Telegram.WebApp;
             tg.expand(); // Расширить мини-приложение на весь экран
+            isTelegram = true;
+        }
 
-            // Инициализация переменных игры
-            let playerChips = 100;
-            let botChips = 100;
-            let playerHand = [];
-            let botHand = [];
-            let commonCard = null;
-            let pot = 0;
+        // Начальные переменные и колода карт
+        let playerChips = 100;
+        let botChips = 100;
+        let playerHand = [];
+        let botHand = [];
+        let commonCard = null;
+        let pot = 0;
 
-            const cardValues = {
-                '2': 2, '3': 3, '4': 4, '5': 5, '6': 6, '7': 7, '8': 8, '9': 9, '10': 10,
-                'J': 11, 'Q': 12, 'K': 13, 'A': 14
-            };
-            const cardDeck = Object.keys(cardValues);
+        const cardValues = {
+            '2': 2, '3': 3, '4': 4, '5': 5, '6': 6, '7': 7, '8': 8, '9': 9, '10': 10,
+            'J': 11, 'Q': 12, 'K': 13, 'A': 14
+        };
+        const cardDeck = Object.keys(cardValues);
 
-            function startGame() {
-                playerHand = drawCards(2);
-                botHand = drawCards(2);
-                commonCard = drawCards(1)[0];
+        function startGame() {
+            playerHand = drawCards(2);
+            botHand = drawCards(2);
+            commonCard = drawCards(1)[0];
 
-                playerChips -= 10;
+            playerChips -= 10;
+            botChips -= 10;
+            pot = 20;
+
+            displayGameInfo();
+            displayActions(['call', 'fold', 'raise']);
+            updateChips();
+        }
+
+        function displayGameInfo() {
+            const gameInfo = `
+                <p>Ваши карты: ${playerHand.join(', ')}</p>
+                <p>Общая карта: ${commonCard}</p>
+                <p>В банке: ${pot} фишек</p>
+            `;
+            document.getElementById('game-info').innerHTML = gameInfo;
+        }
+
+        function displayActions(actions) {
+            let buttons = '';
+            if (actions.includes('call')) {
+                buttons += '<button onclick="playerCall()">Колл (10 фишек)</button>';
+            }
+            if (actions.includes('fold')) {
+                buttons += '<button onclick="playerFold()">Пас</button>';
+            }
+            if (actions.includes('raise')) {
+                buttons += '<button onclick="playerRaise()">Повысить (20 фишек)</button>';
+            }
+            document.getElementById('actions').innerHTML = buttons;
+        }
+
+        function playerCall() {
+            playerChips -= 10;
+            pot += 10;
+            if (botMove() === 'call') {
                 botChips -= 10;
-                pot = 20;
-
-                displayGameInfo();
-                displayActions(['call', 'fold', 'raise']);
-                updateChips();
-            }
-
-            function displayGameInfo() {
-                const gameInfo = `
-                    <p>Ваши карты: ${playerHand.join(', ')}</p>
-                    <p>Общая карта: ${commonCard}</p>
-                    <p>В банке: ${pot} фишек</p>
-                `;
-                document.getElementById('game-info').innerHTML = gameInfo;
-            }
-
-            function displayActions(actions) {
-                let buttons = '';
-                if (actions.includes('call')) {
-                    buttons += '<button onclick="playerCall()">Колл (10 фишек)</button>';
-                }
-                if (actions.includes('fold')) {
-                    buttons += '<button onclick="playerFold()">Пас</button>';
-                }
-                if (actions.includes('raise')) {
-                    buttons += '<button onclick="playerRaise()">Повысить (20 фишек)</button>';
-                }
-                document.getElementById('actions').innerHTML = buttons;
-            }
-
-            function playerCall() {
-                playerChips -= 10;
                 pot += 10;
-                if (botMove() === 'call') {
-                    botChips -= 10;
-                    pot += 10;
-                    showDown();
-                } else {
-                    winPot('player');
-                }
-                updateChips();
+                showDown();
+            } else {
+                winPot('player');
             }
+            updateChips();
+        }
 
-            function playerFold() {
-                winPot('bot');
-            }
+        function playerFold() {
+            winPot('bot');
+        }
 
-            function playerRaise() {
-                playerChips -= 20;
+        function playerRaise() {
+            playerChips -= 20;
+            pot += 20;
+            if (botMove(true) === 'call') {
+                botChips -= 20;
                 pot += 20;
-                if (botMove(true) === 'call') {
-                    botChips -= 20;
-                    pot += 20;
-                    showDown();
-                } else {
-                    winPot('player');
-                }
-                updateChips();
+                showDown();
+            } else {
+                winPot('player');
+            }
+            updateChips();
+        }
+
+        function botMove(isRaise = false) {
+            if (isRaise) {
+                return botChips >= 20 ? 'call' : 'fold';
+            }
+            return botChips >= 10 ? 'call' : 'fold';
+        }
+
+        function showDown() {
+            const playerScore = handValue(playerHand) + cardValue(commonCard);
+            const botScore = handValue(botHand) + cardValue(commonCard);
+
+            let result;
+            if (playerScore > botScore) {
+                result = `Вы выиграли с ${playerScore} против ${botScore}`;
+                winPot('player');
+            } else if (playerScore < botScore) {
+                result = `Бот выиграл с ${botScore} против ${playerScore}`;
+                winPot('bot');
+            } else {
+                result = `Ничья! Оба имеют ${playerScore}`;
+                winPot();
             }
 
-            function botMove(isRaise = false) {
-                if (isRaise) {
-                    return botChips >= 20 ? 'call' : 'fold';
-                }
-                return botChips >= 10 ? 'call' : 'fold';
+            document.getElementById('game-info').innerHTML = `<p>${result}</p>`;
+            document.getElementById('actions').innerHTML = '<button onclick="startGame()">Начать новую раздачу</button>';
+            updateChips();
+        }
+
+        function winPot(winner = null) {
+            if (winner === 'player') {
+                playerChips += pot;
+            } else if (winner === 'bot') {
+                botChips += pot;
             }
+            pot = 0;
+        }
 
-            function showDown() {
-                const playerScore = handValue(playerHand) + cardValue(commonCard);
-                const botScore = handValue(botHand) + cardValue(commonCard);
+        function drawCards(num) {
+            return Array.from({ length: num }, () => cardDeck[Math.floor(Math.random() * cardDeck.length)]);
+        }
 
-                let result;
-                if (playerScore > botScore) {
-                    result = `Вы выиграли с ${playerScore} против ${botScore}`;
-                    winPot('player');
-                } else if (playerScore < botScore) {
-                    result = `Бот выиграл с ${botScore} против ${playerScore}`;
-                    winPot('bot');
-                } else {
-                    result = `Ничья! Оба имеют ${playerScore}`;
-                    winPot();
-                }
+        function handValue(hand) {
+            return hand.reduce((total, card) => total + cardValues[card], 0);
+        }
 
-                document.getElementById('game-info').innerHTML = `<p>${result}</p>`;
-                document.getElementById('actions').innerHTML = '<button onclick="startGame()">Начать новую раздачу</button>';
-                updateChips();
-            }
+        function cardValue(card) {
+            return cardValues[card];
+        }
 
-            function winPot(winner = null) {
-                if (winner === 'player') {
-                    playerChips += pot;
-                } else if (winner === 'bot') {
-                    botChips += pot;
-                }
-                pot = 0;
-            }
+        function updateChips() {
+            document.getElementById('player-chips').innerText = playerChips;
+            document.getElementById('bot-chips').innerText = botChips;
+        }
 
-            function drawCards(num) {
-                return Array.from({ length: num }, () => cardDeck[Math.floor(Math.random() * cardDeck.length)]);
-            }
-
-            function handValue(hand) {
-                return hand.reduce((total, card) => total + cardValues[card], 0);
-            }
-
-            function cardValue(card) {
-                return cardValues[card];
-            }
-
-            function updateChips() {
-                document.getElementById('player-chips').innerText = playerChips;
-                document.getElementById('bot-chips').innerText = botChips;
-            }
-
-            function endGame() {
+        function endGame() {
+            if (isTelegram) {
                 tg.sendData(JSON.stringify({ playerChips, botChips }));
                 tg.close();
+            } else {
+                alert(`Игра завершена!\nВаши фишки: ${playerChips}\nФишки бота: ${botChips}`);
             }
+        }
 
+        // Добавление кнопки "Завершить игру" только в Telegram WebApp
+        if (isTelegram) {
             tg.MainButton.setText("Завершить игру");
             tg.MainButton.show();
             tg.MainButton.onClick(endGame);
-
-        } else {
-            // Сообщение или логика для случая, если приложение запущено не в Telegram
-            document.body.innerHTML = "<h1>Пожалуйста, откройте это мини-приложение внутри Telegram.</h1>";
         }
     </script>
 </body>
