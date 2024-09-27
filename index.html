@@ -73,9 +73,11 @@
         </div>
     </div>
     <script>
+        // Инициализация карты должна происходить до всех функций
         const tg = window.Telegram.WebApp;
         tg.expand();
 
+        // Начальные переменные
         let playerChips = 100;
         let botChips = 100;
         let playerHand = [];
@@ -83,12 +85,12 @@
         let commonCard = null;
         let pot = 0;
 
-        // Инициализация значений карт
+        // Инициализация значений карт и колоды
         const cardValues = {
             '2': 2, '3': 3, '4': 4, '5': 5, '6': 6, '7': 7, '8': 8, '9': 9, '10': 10,
             'J': 11, 'Q': 12, 'K': 13, 'A': 14
         };
-        const cardDeck = Object.keys(cardValues);
+        const cardDeck = Object.keys(cardValues); // Определяем колоду карт
 
         function startGame() {
             playerHand = drawCards(2);
