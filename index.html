@@ -292,9 +292,15 @@
         }
 
         function botTurn(stage) {
-            let botDecision = Math.random() < 0.5 ? 'call' : 'fold'; // Случайное решение
+            let botDecision;
 
-            if (botDecision === 'call' && currentBet > 0) {
+            if (currentBet === 0) {
+                botDecision = 'check'; // Если нет ставки, бот чекает
+            } else {
+                botDecision = Math.random() < 0.5 ? 'call' : 'fold'; // Случайное решение
+            }
+
+            if (botDecision === 'call') {
                 if (botChips >= currentBet) {
                     botChips -= currentBet;
                     pot += currentBet;
@@ -309,7 +315,7 @@
                 playerChips += pot;
                 updateUI(false);
                 endRound(`Бот сбросил карты. Вы выиграли банк в ${pot} фишек!`);
-            } else if (botDecision === 'call') {
+            } else if (botDecision === 'check') {
                 nextStage(stage);
             } else {
                 nextStage(stage);
@@ -393,6 +399,9 @@
         function determineWinner() {
             const playerScore = calculateHandScore(playerHand.concat(communityCards));
             const botScore = calculateHandScore(botHand.concat(communityCards));
+
+            // Показать карты бота в конце игры
+            updateUI(false);
 
             let result;
             if (playerScore > botScore) {
