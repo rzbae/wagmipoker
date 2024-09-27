@@ -23,31 +23,32 @@
             align-items: center;
             background-color: #2c3e50;
             border-radius: 20px;
-            padding: 20px;
+            padding: 10px; /* Уменьшено значение */
             box-shadow: 0 0 15px rgba(0, 0, 0, 0.5);
             width: 95%;
-            max-width: 1200px;
+            max-width: 400px; /* Ограничение по ширине для мини-аппа */
             height: 90vh;
             position: relative;
         }
         .poker-table {
             background: radial-gradient(circle, #016936 0%, #054317 50%, #01330d 100%);
             border-radius: 50%;
-            width: 95%;
-            height: 50%;
+            width: 100%;
+            height: 45%; /* Уменьшено значение */
             position: relative;
             display: flex;
             justify-content: center;
             align-items: center;
-            box-shadow: 0 0 30px rgba(0, 0, 0, 0.5);
+            box-shadow: 0 0 15px rgba(0, 0, 0, 0.5); /* Уменьшена тень */
+            margin-bottom: 10px; /* Добавлен отступ для карт */
         }
         .poker-table::after {
             content: '';
             position: absolute;
             top: 50%;
             left: 50%;
-            width: 90%;
-            height: 70%;
+            width: 80%;
+            height: 60%;
             background: rgba(0, 0, 0, 0.2);
             border-radius: 50%;
             transform: translate(-50%, -50%);
@@ -58,7 +59,8 @@
             display: flex;
             justify-content: center;
             align-items: center;
-            gap: 10px;
+            gap: 5px; /* Уменьшены отступы */
+            flex-wrap: nowrap; /* Убедиться, что карты не переносятся */
         }
         .cards {
             top: 50%;
@@ -66,27 +68,27 @@
             transform: translate(-50%, -50%);
         }
         .player {
-            bottom: 15%;
+            bottom: 10%; /* Позиция игрока на столе */
             left: 50%;
             transform: translateX(-50%);
         }
         .bot {
-            top: 15%;
+            top: 10%; /* Позиция бота на столе */
             left: 50%;
             transform: translateX(-50%);
         }
         .card {
-            width: 50px; /* Уменьшен размер карт */
-            height: 75px; /* Уменьшен размер карт */
+            width: 40px; /* Уменьшен размер карт */
+            height: 60px; /* Уменьшен размер карт */
             background-color: #fff;
             border-radius: 10px;
             display: flex;
             justify-content: center;
             align-items: center;
-            font-size: 18px; /* Уменьшен размер шрифта */
+            font-size: 14px; /* Уменьшен размер шрифта */
             font-weight: bold;
             color: #333;
-            margin: 5px;
+            margin: 2px; /* Уменьшен отступ */
             box-shadow: 0 0 5px rgba(0, 0, 0, 0.2);
             transition: transform 0.3s ease-in-out, opacity 0.3s ease-in-out;
         }
@@ -103,16 +105,16 @@
             color: #fff;
         }
         .chips, .pot {
-            font-size: 20px;
+            font-size: 16px; /* Уменьшен размер шрифта */
             font-weight: bold;
             background-color: #e76f51;
             color: #fff;
-            padding: 10px;
+            padding: 5px 10px; /* Уменьшены отступы */
             border-radius: 10px;
             position: absolute;
-            top: 50%;
+            top: 5%; /* Положение по вертикали */
             left: 50%;
-            transform: translate(-50%, -150%);
+            transform: translateX(-50%);
             z-index: 10;
         }
         .chips {
@@ -121,19 +123,23 @@
             margin-top: 5px;
         }
         .actions {
-            margin-top: 20px;
+            margin-top: 10px;
             display: flex;
-            gap: 10px;
+            gap: 5px; /* Уменьшены отступы между кнопками */
+            flex-wrap: wrap; /* Кнопки будут переноситься, если не вмещаются */
+            justify-content: center;
         }
         .actions button {
             background-color: #ef233c;
             color: #fff;
             border: none;
-            padding: 10px 20px;
-            font-size: 16px;
+            padding: 5px 10px; /* Уменьшены отступы */
+            font-size: 14px; /* Уменьшен размер шрифта */
             cursor: pointer;
             border-radius: 5px;
             transition: background-color 0.3s;
+            flex: 1; /* Кнопки занимают равное пространство */
+            min-width: 70px; /* Минимальная ширина кнопок */
         }
         .actions button:hover {
             background-color: #d90429;
@@ -143,31 +149,56 @@
             cursor: not-allowed;
         }
         .info {
-            font-size: 18px;
+            font-size: 14px; /* Уменьшен размер шрифта */
             text-align: center;
-            margin-top: 20px;
+            margin-top: 10px;
         }
         .player-info, .bot-info {
             position: absolute;
             background-color: #264653;
             color: #fff;
-            padding: 10px;
+            padding: 5px 10px; /* Уменьшены отступы */
             border-radius: 10px;
-            font-size: 18px;
+            font-size: 14px; /* Уменьшен размер шрифта */
         }
         .player-info {
-            bottom: 10%;
+            bottom: 5%; /* Позиция ниже */
             left: 50%;
             transform: translateX(-50%);
         }
         .bot-info {
-            top: 10%;
+            top: 5%; /* Позиция выше */
             left: 50%;
             transform: translateX(-50%);
         }
         h1 {
             color: #e76f51;
-            margin-bottom: 10px;
+            margin-bottom: 5px; /* Уменьшен отступ */
+            font-size: 20px; /* Уменьшен размер */
+        }
+
+        @media (max-width: 500px) {
+            .container {
+                padding: 5px; /* Дополнительное уменьшение отступов для небольших экранов */
+            }
+            .card {
+                width: 35px; /* Еще меньше размеры карт */
+                height: 55px;
+                font-size: 12px;
+            }
+            .actions button {
+                font-size: 12px; /* Меньше текст на кнопках */
+                padding: 4px 8px;
+            }
+            .chips, .pot {
+                font-size: 14px; /* Меньше шрифт на информационных блоках */
+            }
+            .info, .player-info, .bot-info {
+                font-size: 12px; /* Меньше шрифт для информации */
+            }
+            h1 {
+                font-size: 18px; /* Меньше размер заголовка */
+            }
         }
     </style>
 </head>
@@ -175,7 +206,7 @@
     <div class="container">
         <h1>Texas Hold'em Poker</h1>
         <div class="poker-table">
-            <div class="pot" id="pot-info">Банк: 0</div>
+            <div class="pot" id="pot-info">Банк: 0 фишек</div>
             <div class="cards" id="community-cards">
                 <!-- Общие карты -->
             </div>
@@ -439,13 +470,13 @@
 
             if (isFlush && isStraight) return 9; // Стрит-флеш
             if (uniqueRanks.some(rank => rankCount[rank] === 4)) return 8; // Каре
-            if (uniqueRanks.some(rank => rankCount[rank] === 3) && uniqueRanks.some(rank => rankCount[rank] === 2)) return 7; // Фулл-хаус
-            if (isFlush) return 6; // Флеш
-            if (isStraight) return 5; // Стрит
-            if (uniqueRanks.some(rank => rankCount[rank] === 3)) return 4; // Сет
-            if (uniqueRanks.filter(rank => rankCount[rank] === 2).length >= 2) return 3; // Две пары
-            if (uniqueRanks.some(rank => rankCount[rank] === 2)) return 2; // Одна пара
-            return 1; // Старшая карта
+            if (uniqueRanks.some(rank => rankCount[rank] === 3) и уникальныеРанки.some(ранг => рангСчет[ранг] === 2)) возврат 7; // Фулл-хаус
+            если (это flush) return 6; // flush
+            если (это прямой) вернуть 5; // straight
+            если (уникальныеРанки.some(ранг => рангСчет[ранг] === 3)) вернуть 4; // set
+            если (уникальныеРанки.filter(ранг => рангСчет[ранг] === 2).length >= 2) вернуть 3; // Две пары
+            если (уникальныеРанки.some(ранг => рангСчет[ранг] === 2)) вернуть 2; // Одна пара
+            вернуть 1; // Высокая карта
         }
 
         function endRound(message) {
